@@ -92,7 +92,7 @@ export default function MovementScanner({ onCode }) {
       <div className="camera-guide" aria-hidden="true"><span /></div>
       {scanBounds && <div className="scanner-box" style={{ left: `${scanBounds.left}%`, top: `${scanBounds.top}%`, width: `${scanBounds.width}%`, height: `${scanBounds.height}%` }} />}
     </div>}
-    <audio ref={audioRef} src="/scanner-beep.mp3" preload="auto" />
+    <audio ref={audioRef} src={`${import.meta.env.BASE_URL}scanner-beep.mp3`} preload="auto" />
     {message && <p role="status">{message}</p>}
   </div>;
 }

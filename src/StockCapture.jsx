@@ -190,7 +190,7 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
         {scanBounds && <div className="scanner-box" style={{ left: `${scanBounds.left}%`, top: `${scanBounds.top}%`, width: `${scanBounds.width}%`, height: `${scanBounds.height}%` }} />}
         {detectedCode && scanBounds && <div className="scan-result">Código identificado: <strong>{detectedCode}</strong></div>}
       </div>
-      <audio ref={audioRef} src="/scanner-beep.mp3" preload="auto" />
+      <audio ref={audioRef} src={`${import.meta.env.BASE_URL}scanner-beep.mp3`} preload="auto" />
       <button type="button" onClick={startCamera} className="camera-start w-full rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-white hover:bg-slate-900">Abrir câmera e ler código</button>
       <p className="text-xs text-slate-500">Use preferencialmente a câmera traseira. Compatível com EAN, UPC, Code 39, Code 128, ITF e QR Code.</p>
     </div>}
