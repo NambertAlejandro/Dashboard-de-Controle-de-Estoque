@@ -58,11 +58,17 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
   const [message, setMessage] = useState('');
   const [candidates, setCandidates] = useState([]);
   const [selected, setSelected] = useState([]);
+  const [scanBounds, setScanBounds] = useState(null);
+  const [detectedCode, setDetectedCode] = useState('');
   const videoRef = useRef(null);
+  const audioRef = useRef(null);
   const streamRef = useRef(null);
   const scannerControlsRef = useRef(null);
+  const scanTimerRef = useRef(null);
 
   const stopCamera = () => {
+    clearTimeout(scanTimerRef.current);
+    scanTimerRef.current = null;
     scannerControlsRef.current?.stop();
     scannerControlsRef.current = null;
     streamRef.current?.getTracks().forEach(track => track.stop());
@@ -78,6 +84,24 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
     setMessage('');
     setCandidates([]);
     setSelected([]);
+    setScanBounds(null);
+    setDetectedCode('');
+  };
+
+  const showDetectedArea = result => {
+    const points = result.getResultPoints?.() || [];
+    const video = videoRef.current;
+    if (!video || points.length < 2 || !video.videoWidth || !video.videoHeight) {
+      setScanBounds({ left: 15, top: 35, width: 70, height: 30 });
+      return;
+    }
+    const xs = points.map(point => point.getX?.() ?? point.x);
+    const ys = points.map(point => point.getY?.() ?? point.y);
+    const left = Math.max(0, Math.min(...xs) / video.videoWidth * 100);
+    const top = Math.max(0, Math.min(...ys) / video.videoHeight * 100);
+    const width = Math.min(100 - left, Math.max(12, (Math.max(...xs) - Math.min(...xs)) / video.videoWidth * 100));
+    const height = Math.min(100 - top, Math.max(12, (Math.max(...ys) - Math.min(...ys)) / video.videoHeight * 100));
+    setScanBounds({ left, top, width, height });
   };
 
   const startCamera = async () => {
@@ -87,17 +111,25 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
       setMessage('Aponte a câmera para um código de barras ou QR.');
       const { BrowserMultiFormatReader } = await import('@zxing/browser');
       const reader = new BrowserMultiFormatReader();
+      let readingLocked = false;
       scannerControlsRef.current = await reader.decodeFromConstraints(
-        { video: { facingMode: { ideal: 'environment' } }, audio: false },
+        { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
         videoRef.current,
         result => {
-          if (!result) return;
+          if (!result || readingLocked) return;
+          readingLocked = true;
           const raw = result.getText();
           const parsed = extractData(raw);
           onSku(parsed.sku || raw);
           if (parsed.quantity) onQuantity(parsed.quantity);
+          setDetectedCode(parsed.sku || raw);
+          showDetectedArea(result);
+          audioRef.current?.play().catch(() => {});
           setMessage(parsed.quantity ? `Código e quantidade ${parsed.quantity} identificados.` : `Código ${parsed.sku || raw} identificado e aplicado ao SKU.`);
-          stopCamera();
+          scanTimerRef.current = setTimeout(() => {
+            setScanBounds(null);
+            stopCamera();
+          }, 1700);
         },
       );
       streamRef.current = videoRef.current?.srcObject;
@@ -151,7 +183,17 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
       {[['manual', 'Digitar'], ['camera', 'Câmera'], ['pdf', 'PDF']].map(([value, label]) => <button key={value} type="button" onClick={() => selectMode(value)} className={`rounded-lg border px-2 py-2 text-xs font-medium transition-colors ${mode === value ? 'border-green-500 bg-white text-green-700' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}`}>{label}</button>)}
     </div>
     {mode === 'manual' && <p className="mt-2 text-xs text-slate-500">Preencha a quantidade recebida no campo abaixo.</p>}
-    {mode === 'camera' && <div className="mt-3 space-y-2"><video ref={videoRef} muted playsInline className="aspect-video w-full rounded-lg bg-slate-900 object-cover" /><button type="button" onClick={startCamera} className="w-full rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-white hover:bg-slate-900">Abrir câmera e ler código</button><p className="text-xs text-slate-500">Compatível com EAN-8, EAN-13, UPC, Code 39, Code 128, ITF, QR Code e outros formatos.</p></div>}
+    {mode === 'camera' && <div className="mt-3 space-y-2">
+      <div className="camera-preview">
+        <video ref={videoRef} muted playsInline className="cam" />
+        <div className="camera-guide" aria-hidden="true"><span /></div>
+        {scanBounds && <div className="scanner-box" style={{ left: `${scanBounds.left}%`, top: `${scanBounds.top}%`, width: `${scanBounds.width}%`, height: `${scanBounds.height}%` }} />}
+        {detectedCode && scanBounds && <div className="scan-result">Código identificado: <strong>{detectedCode}</strong></div>}
+      </div>
+      <audio ref={audioRef} src="/scanner-beep.mp3" preload="auto" />
+      <button type="button" onClick={startCamera} className="camera-start w-full rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-white hover:bg-slate-900">Abrir câmera e ler código</button>
+      <p className="text-xs text-slate-500">Use preferencialmente a câmera traseira. Compatível com EAN, UPC, Code 39, Code 128, ITF e QR Code.</p>
+    </div>}
     {mode === 'pdf' && <div className="mt-3"><label className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-green-300 bg-white px-4 py-4 text-center text-xs font-medium text-green-700 hover:bg-green-50"><input type="file" accept="application/pdf,.pdf" onChange={readPdf} className="sr-only" />Selecionar nota ou relatório em PDF</label></div>}
     {message && <p role="status" className="mt-2 text-xs text-slate-600">{message}</p>}
     {candidates.length > 1 && <div className="mt-3 space-y-2">

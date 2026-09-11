@@ -1,50 +1,129 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import 'tailwindcss';
+@import './styles.css';
 
-@theme inline {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-}
-
-* {
-  font-family: var(--font-sans);
-  box-sizing: border-box;
+/* Regras gerais do aplicativo. Todo o estilo é CSS local. */
+html,
+body,
+#root {
+  min-height: 100%;
 }
 
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
-html, body, #root {
-  height: 100%;
+body {
   margin: 0;
-  padding: 0;
-  background-color: #f8fafc;
-  color: #1e293b;
 }
 
-button, input, select { min-height: 36px; }
-button { cursor: pointer; }
-button:disabled { cursor: not-allowed; opacity: .5; }
-:focus-visible { outline: 2px solid #16a34a; outline-offset: 3px; }
-.inventory-table { min-width: 660px; }
-@media (max-width: 1023px) {
-  .app-sidebar > div:first-child { padding: 12px 16px; }
-  .app-sidebar > div:last-child { display: none; }
-  .app-sidebar nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 6px; gap: 2px; }
-  .app-sidebar nav button { flex-direction: column; gap: 4px; padding: 8px 2px; font-size: 11px; position: relative; }
-  .app-sidebar nav button > span:last-child:not(:nth-child(2)) { position: absolute; right: 4px; top: 0; }
-  .app-shell main .flex.items-center.px-5.py-4.gap-4 { flex-wrap: wrap; gap: 10px; padding: 14px; }
-  .app-shell main .flex.items-center.px-5.py-4.gap-4 > .flex-1 { flex-basis: 100%; }
-  input, select, textarea { font-size: 16px !important; }
+.camera-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #0f172a;
+}
+
+.camera-preview .cam {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.camera-guide {
+  position: absolute;
+  inset: 22% 10%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 14px;
+  box-shadow: 0 0 0 999px rgba(15, 23, 42, 0.38);
+  pointer-events: none;
+}
+
+.camera-guide span {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 50%;
+  height: 2px;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+  animation: scanner-line 1.8s ease-in-out infinite;
+}
+
+.scanner-box {
+  position: absolute;
+  z-index: 2;
+  min-width: 48px;
+  min-height: 34px;
+  border: 3px solid #22c55e;
+  border-radius: 8px;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2), 0 0 18px rgba(34, 197, 94, 0.65);
+  pointer-events: none;
+}
+
+.scan-result {
+  position: absolute;
+  z-index: 3;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: rgba(15, 23, 42, 0.88);
+  color: white;
+  font-size: 13px;
+  text-align: center;
+  animation: scan-flash 0.45s ease-out;
+}
+
+@keyframes scanner-line {
+  0%, 100% { transform: translateY(-45px); opacity: 0.55; }
+  50% { transform: translateY(45px); opacity: 1; }
+}
+
+@keyframes scan-flash {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (min-width: 640px) {
+  .camera-preview { aspect-ratio: 16 / 9; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .camera-guide span,
+  .scan-result { animation: none; }
+}
+
+.movement-scanner {
+  padding: 12px;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  background: #f0fdf4;
+}
+
+.movement-scanner-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.movement-scanner-actions button {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #15803d;
+  color: white;
+  font: inherit;
+}
+
+.movement-scanner-actions button:hover { background: #166534; }
+.movement-camera { margin-top: 12px; }
+.movement-scanner > p { margin: 9px 0 0; color: #475569; font-size: 12px; }
+
+@media (max-width: 480px) {
+  .movement-scanner-actions { align-items: stretch; flex-direction: column; }
+  .movement-scanner-actions button { width: 100%; }
 }

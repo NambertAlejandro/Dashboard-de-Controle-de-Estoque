@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import ItemForm from './ItemForm.jsx';
 import HistoryScreen from './HistoryScreen.jsx';
+import MovementScanner from './MovementScanner.jsx';
 import { ITEM_TYPES, isStockItem, statusFor, applyMovement } from './inventory.js';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 // ─── Seed Data ────────────────────────────────────────────────────────────────
@@ -357,6 +358,13 @@ function MovimentacoesScreen({ products, movements, onAdd }) {
         date: new Date().toISOString().slice(0, 10),
     });
     const [error, setError] = useState('');
+    const selectProductBySku = code => {
+        const product = products.find(item => item.sku?.trim().toLowerCase() === code.trim().toLowerCase());
+        if (!product) return null;
+        setForm(current => ({ ...current, product: String(product.id) }));
+        setError('');
+        return product;
+    };
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!form.product || !form.quantity)
@@ -387,6 +395,7 @@ function MovimentacoesScreen({ products, movements, onAdd }) {
           <h2 className="text-sm font-semibold text-slate-700 mb-5">Nova movimentação</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
             {error && <p role="alert" className="col-span-2 text-sm text-red-600">{error}</p>}
+            <div className="col-span-2"><MovementScanner onCode={selectProductBySku} /></div>
             <div className="col-span-2">
               <label className="block text-xs font-medium text-slate-500 mb-1.5">Produto</label>
               <select value={form.product} onChange={e => setForm(f => ({ ...f, product: e.target.value }))} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-400">
