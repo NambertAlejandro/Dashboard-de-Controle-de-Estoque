@@ -1,4 +1,4 @@
-import originalSoundUrl from './assets/scanner-beep.mp3?url';
+import originalSoundUrl from './assets/freesound_community-store-scanner-beep-90395.mp3.mpeg';
 
 let context;
 let bufferPromise;
