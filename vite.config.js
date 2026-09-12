@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  base: '/Dashboard-de-Controle-de-Estoque/',
+  base: process.env.GITHUB_ACTIONS ? '/Dashboard-de-Controle-de-Estoque/' : '/',
   plugins: [react()],
   server: {
     host: '0.0.0.0',
