@@ -60,19 +60,28 @@ export default function MovementScanner({ onCode }) {
       const { BrowserMultiFormatReader } = await import('@zxing/browser');
       const reader = new BrowserMultiFormatReader();
       let readingLocked = false;
+      let lastCode = '';
+      let lastSeen = 0;
       controlsRef.current = await reader.decodeFromConstraints(
         { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
         videoRef.current,
         result => {
-          if (!result || readingLocked) return;
+          if (!result) return;
+          const now = Date.now();
+          const repeated = result.getText() === lastCode && now - lastSeen < 1500;
+          lastSeen = now;
+          if (readingLocked || repeated) return;
+          lastCode = result.getText();
           readingLocked = true;
           const code = result.getText().trim();
           const selected = onCode(code);
           showDetectedArea(result);
-          void playScannerSound();
+          void playScannerSound().then(played => {
+            if (!played) setMessage(current => current + ' Som bloqueado: toque em Testar som.');
+          });
           setMessage(selected ? `${selected.name} selecionado pelo SKU ${code}.` : `Nenhum produto cadastrado com o SKU ${code}.`);
           timerRef.current = setTimeout(() => {
-            stopCamera();
+            readingLocked = false;
             setScanBounds(null);
           }, 1700);
         },
@@ -88,6 +97,7 @@ export default function MovementScanner({ onCode }) {
       <span>Encontre o produto pelo código SKU</span>
       <button type="button" onClick={open ? close : startCamera}>{open ? 'Fechar câmera' : 'Ler SKU com a câmera'}</button>
     </div>
+    <button type="button" onClick={() => { prepareScannerSound(); void playScannerSound().then(ok => setMessage(ok ? 'Reproduzindo o áudio original.' : 'Não foi possível tocar o áudio. Confira o volume e a permissão de som do navegador.')); }}>Testar som</button>
     {open && <div className="camera-preview movement-camera">
       <video ref={videoRef} muted playsInline className="cam" />
       <div className="camera-guide" aria-hidden="true"><span /></div>

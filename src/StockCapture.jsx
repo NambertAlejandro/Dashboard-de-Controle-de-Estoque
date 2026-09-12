@@ -113,11 +113,18 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
       const { BrowserMultiFormatReader } = await import('@zxing/browser');
       const reader = new BrowserMultiFormatReader();
       let readingLocked = false;
+      let lastCode = '';
+      let lastSeen = 0;
       scannerControlsRef.current = await reader.decodeFromConstraints(
         { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
         videoRef.current,
         result => {
-          if (!result || readingLocked) return;
+          if (!result) return;
+          const now = Date.now();
+          const repeated = result.getText() === lastCode && now - lastSeen < 1500;
+          lastSeen = now;
+          if (readingLocked || repeated) return;
+          lastCode = result.getText();
           readingLocked = true;
           const raw = result.getText();
           const parsed = extractData(raw);
@@ -125,11 +132,13 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
           if (parsed.quantity) onQuantity(parsed.quantity);
           setDetectedCode(parsed.sku || raw);
           showDetectedArea(result);
-          void playScannerSound();
+          void playScannerSound().then(played => {
+            if (!played) setMessage(current => current + ' Som bloqueado: toque em Testar som.');
+          });
           setMessage(parsed.quantity ? `Código e quantidade ${parsed.quantity} identificados.` : `Código ${parsed.sku || raw} identificado e aplicado ao SKU.`);
           scanTimerRef.current = setTimeout(() => {
             setScanBounds(null);
-            stopCamera();
+            readingLocked = false;
           }, 1700);
         },
       );
@@ -192,6 +201,7 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
         {detectedCode && scanBounds && <div className="scan-result">Código identificado: <strong>{detectedCode}</strong></div>}
       </div>
       <button type="button" onClick={startCamera} className="camera-start w-full rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-white hover:bg-slate-900">Abrir câmera e ler código</button>
+      <button type="button" onClick={() => { prepareScannerSound(); void playScannerSound().then(ok => setMessage(ok ? 'Reproduzindo o áudio original.' : 'Não foi possível tocar o áudio. Confira o volume e a permissão de som do navegador.')); }}>Testar som</button>
       <p className="text-xs text-slate-500">Use preferencialmente a câmera traseira. Compatível com EAN, UPC, Code 39, Code 128, ITF e QR Code.</p>
     </div>}
     {mode === 'pdf' && <div className="mt-3"><label className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-green-300 bg-white px-4 py-4 text-center text-xs font-medium text-green-700 hover:bg-green-50"><input type="file" accept="application/pdf,.pdf" onChange={readPdf} className="sr-only" />Selecionar nota ou relatório em PDF</label></div>}
