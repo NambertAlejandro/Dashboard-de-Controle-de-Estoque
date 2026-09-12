@@ -97,7 +97,7 @@ export default function MovementScanner({ onCode }) {
       <span>Encontre o produto pelo código SKU</span>
       <button type="button" onClick={open ? close : startCamera}>{open ? 'Fechar câmera' : 'Ler SKU com a câmera'}</button>
     </div>
-    <button type="button" onClick={() => { prepareScannerSound(); void playScannerSound().then(ok => setMessage(ok ? 'Reproduzindo o áudio original.' : 'Não foi possível tocar o áudio. Confira o volume e a permissão de som do navegador.')); }}>Testar som</button>
+    <button type="button" onClick={() => { prepareScannerSound(); void playScannerSound(true).then(ok => setMessage(ok ? 'Bip de mercado reproduzido.' : 'Não foi possível reproduzir o som neste navegador.')); }}>Testar som</button>
     {open && <div className="camera-preview movement-camera">
       <video ref={videoRef} muted playsInline className="cam" />
       <div className="camera-guide" aria-hidden="true"><span /></div>

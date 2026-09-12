@@ -1,9 +1,8 @@
-import originalSoundUrl from './assets/freesound_community-store-scanner-beep-90395.mp3.mpeg';
+import originalSoundUrl from './assets/market-beep.wav';
 
 let context;
 let bufferPromise;
 let originalAudio;
-let unlockPromise;
 
 // Called directly by the camera button, before any asynchronous camera work.
 export function prepareScannerSound() {
@@ -11,14 +10,6 @@ export function prepareScannerSound() {
     originalAudio = new Audio(originalSoundUrl);
     originalAudio.preload = 'auto';
   }
-  // Unlock the same original recording for browsers that cannot decode Web Audio.
-  originalAudio.muted = true;
-  const unlock = originalAudio.play();
-  unlockPromise = unlock?.then(() => {
-    originalAudio.pause();
-    originalAudio.currentTime = 0;
-    originalAudio.muted = false;
-  }).catch(() => { originalAudio.muted = false; });
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
@@ -45,8 +36,14 @@ export function prepareScannerSound() {
   }
 }
 
-export async function playScannerSound() {
+export async function playScannerSound(direct = false) {
   try {
+    if (direct) {
+      if (!originalAudio) originalAudio = new Audio(originalSoundUrl);
+      originalAudio.currentTime = 0;
+      await originalAudio.play();
+      return true;
+    }
     const buffer = await bufferPromise;
     if (buffer && context?.state === 'running') {
       const source = context.createBufferSource();
@@ -57,7 +54,6 @@ export async function playScannerSound() {
       return true;
     }
     if (!originalAudio) originalAudio = new Audio(originalSoundUrl);
-    await unlockPromise;
     originalAudio.muted = false;
     originalAudio.currentTime = 0;
     await originalAudio.play();
