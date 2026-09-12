@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { prepareScannerSound, playScannerSound } from './scannerSound.js';
 
 export default function MovementScanner({ onCode }) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [scanBounds, setScanBounds] = useState(null);
   const videoRef = useRef(null);
-  const audioRef = useRef(null);
   const controlsRef = useRef(null);
   const timerRef = useRef(null);
 
@@ -47,6 +47,7 @@ export default function MovementScanner({ onCode }) {
   };
 
   const startCamera = async () => {
+    prepareScannerSound();
     if (!navigator.mediaDevices?.getUserMedia) {
       setMessage('A câmera não está disponível neste navegador.');
       return;
@@ -68,7 +69,7 @@ export default function MovementScanner({ onCode }) {
           const code = result.getText().trim();
           const selected = onCode(code);
           showDetectedArea(result);
-          audioRef.current?.play().catch(() => {});
+          void playScannerSound();
           setMessage(selected ? `${selected.name} selecionado pelo SKU ${code}.` : `Nenhum produto cadastrado com o SKU ${code}.`);
           timerRef.current = setTimeout(() => {
             stopCamera();
@@ -92,7 +93,6 @@ export default function MovementScanner({ onCode }) {
       <div className="camera-guide" aria-hidden="true"><span /></div>
       {scanBounds && <div className="scanner-box" style={{ left: `${scanBounds.left}%`, top: `${scanBounds.top}%`, width: `${scanBounds.width}%`, height: `${scanBounds.height}%` }} />}
     </div>}
-    <audio ref={audioRef} src={`${import.meta.env.BASE_URL}scanner-beep.mp3`} preload="auto" />
     {message && <p role="status">{message}</p>}
   </div>;
 }

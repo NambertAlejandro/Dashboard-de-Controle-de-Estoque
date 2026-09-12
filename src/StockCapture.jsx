@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { prepareScannerSound, playScannerSound } from './scannerSound.js';
 import * as pdfjs from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
@@ -61,7 +62,6 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
   const [scanBounds, setScanBounds] = useState(null);
   const [detectedCode, setDetectedCode] = useState('');
   const videoRef = useRef(null);
-  const audioRef = useRef(null);
   const streamRef = useRef(null);
   const scannerControlsRef = useRef(null);
   const scanTimerRef = useRef(null);
@@ -105,6 +105,7 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
   };
 
   const startCamera = async () => {
+    prepareScannerSound();
     if (!navigator.mediaDevices?.getUserMedia) return setMessage('A câmera não está disponível neste navegador.');
     try {
       stopCamera();
@@ -124,7 +125,7 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
           if (parsed.quantity) onQuantity(parsed.quantity);
           setDetectedCode(parsed.sku || raw);
           showDetectedArea(result);
-          audioRef.current?.play().catch(() => {});
+          void playScannerSound();
           setMessage(parsed.quantity ? `Código e quantidade ${parsed.quantity} identificados.` : `Código ${parsed.sku || raw} identificado e aplicado ao SKU.`);
           scanTimerRef.current = setTimeout(() => {
             setScanBounds(null);
@@ -190,7 +191,6 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
         {scanBounds && <div className="scanner-box" style={{ left: `${scanBounds.left}%`, top: `${scanBounds.top}%`, width: `${scanBounds.width}%`, height: `${scanBounds.height}%` }} />}
         {detectedCode && scanBounds && <div className="scan-result">Código identificado: <strong>{detectedCode}</strong></div>}
       </div>
-      <audio ref={audioRef} src={`${import.meta.env.BASE_URL}scanner-beep.mp3`} preload="auto" />
       <button type="button" onClick={startCamera} className="camera-start w-full rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-white hover:bg-slate-900">Abrir câmera e ler código</button>
       <p className="text-xs text-slate-500">Use preferencialmente a câmera traseira. Compatível com EAN, UPC, Code 39, Code 128, ITF e QR Code.</p>
     </div>}
