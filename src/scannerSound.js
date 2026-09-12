@@ -1,3 +1,5 @@
+import originalSoundUrl from './assets/scanner-beep.mp3?url';
+
 let context;
 let bufferPromise;
 
@@ -12,14 +14,15 @@ export function prepareScannerSound() {
     }
     void context.resume().catch(error => console.warn('Não foi possível habilitar o som:', error));
     if (!bufferPromise) {
-      bufferPromise = fetch(`${import.meta.env.BASE_URL}scanner-beep.mp3`)
+      bufferPromise = fetch(originalSoundUrl)
         .then(response => {
           if (!response.ok) throw new Error('Áudio indisponível');
           return response.arrayBuffer();
         })
         .then(data => context.decodeAudioData(data))
         .catch(error => {
-          console.warn('Usando bip alternativo:', error);
+          bufferPromise = null;
+          console.warn('Não foi possível carregar o áudio original:', error);
           return null;
         });
     }
@@ -39,17 +42,6 @@ export async function playScannerSound() {
       source.connect(context.destination);
       source.onended = () => source.disconnect();
       source.start();
-    } else {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.frequency.value = 1800;
-      gain.gain.setValueAtTime(0.15, context.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.15);
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
-      oscillator.start();
-      oscillator.stop(context.currentTime + 0.16);
     }
   } catch (error) {
     console.warn('Não foi possível reproduzir o bip:', error);
