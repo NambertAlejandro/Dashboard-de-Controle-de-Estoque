@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { prepareScannerSound, playScannerSound } from './scannerSound.js';
+import { scannerBounds } from './scannerBounds.js';
 
 export default function MovementScanner({ onCode }) {
   const [open, setOpen] = useState(false);
@@ -27,24 +28,6 @@ export default function MovementScanner({ onCode }) {
     setScanBounds(null);
   };
 
-  const showDetectedArea = result => {
-    const points = result.getResultPoints?.() || [];
-    const video = videoRef.current;
-    if (!video || points.length < 2 || !video.videoWidth || !video.videoHeight) {
-      setScanBounds({ left: 15, top: 35, width: 70, height: 30 });
-      return;
-    }
-    const xs = points.map(point => point.getX?.() ?? point.x);
-    const ys = points.map(point => point.getY?.() ?? point.y);
-    const left = Math.max(0, Math.min(...xs) / video.videoWidth * 100);
-    const top = Math.max(0, Math.min(...ys) / video.videoHeight * 100);
-    setScanBounds({
-      left,
-      top,
-      width: Math.min(100 - left, Math.max(12, (Math.max(...xs) - Math.min(...xs)) / video.videoWidth * 100)),
-      height: Math.min(100 - top, Math.max(12, (Math.max(...ys) - Math.min(...ys)) / video.videoHeight * 100)),
-    });
-  };
 
   const startCamera = async () => {
     prepareScannerSound();
@@ -58,8 +41,7 @@ export default function MovementScanner({ onCode }) {
       setMessage('Aponte a câmera para o código SKU do produto.');
       await new Promise(resolve => requestAnimationFrame(resolve));
       const { BrowserMultiFormatReader } = await import('@zxing/browser');
-      const reader = new BrowserMultiFormatReader();
-      let readingLocked = false;
+      const reader = new BrowserMultiFormatReader(undefined, { delayBetweenScanAttempts: 100, delayBetweenScanSuccess: 100 });
       let lastCode = '';
       let lastSeen = 0;
       controlsRef.current = await reader.decodeFromConstraints(
@@ -67,23 +49,21 @@ export default function MovementScanner({ onCode }) {
         videoRef.current,
         result => {
           if (!result) return;
+          setScanBounds(scannerBounds(result, videoRef.current));
+          clearTimeout(timerRef.current);
+          timerRef.current = setTimeout(() => setScanBounds(null), 650);
           const now = Date.now();
           const repeated = result.getText() === lastCode && now - lastSeen < 1500;
           lastSeen = now;
-          if (readingLocked || repeated) return;
+          if (repeated) return;
           lastCode = result.getText();
-          readingLocked = true;
           const code = result.getText().trim();
           const selected = onCode(code);
-          showDetectedArea(result);
           void playScannerSound().then(played => {
             if (!played) setMessage(current => current + ' Não foi possível reproduzir o bip. Confira a permissão de som do navegador.');
           });
           setMessage(selected ? `${selected.name} selecionado pelo SKU ${code}.` : `Nenhum produto cadastrado com o SKU ${code}.`);
-          timerRef.current = setTimeout(() => {
-            readingLocked = false;
-            setScanBounds(null);
-          }, 1700);
+           setScanBounds(null);
         },
       );
     } catch {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { prepareScannerSound, playScannerSound } from './scannerSound.js';
+import { scannerBounds } from './scannerBounds.js';
 import * as pdfjs from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
@@ -88,21 +89,6 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
     setDetectedCode('');
   };
 
-  const showDetectedArea = result => {
-    const points = result.getResultPoints?.() || [];
-    const video = videoRef.current;
-    if (!video || points.length < 2 || !video.videoWidth || !video.videoHeight) {
-      setScanBounds({ left: 15, top: 35, width: 70, height: 30 });
-      return;
-    }
-    const xs = points.map(point => point.getX?.() ?? point.x);
-    const ys = points.map(point => point.getY?.() ?? point.y);
-    const left = Math.max(0, Math.min(...xs) / video.videoWidth * 100);
-    const top = Math.max(0, Math.min(...ys) / video.videoHeight * 100);
-    const width = Math.min(100 - left, Math.max(12, (Math.max(...xs) - Math.min(...xs)) / video.videoWidth * 100));
-    const height = Math.min(100 - top, Math.max(12, (Math.max(...ys) - Math.min(...ys)) / video.videoHeight * 100));
-    setScanBounds({ left, top, width, height });
-  };
 
   const startCamera = async () => {
     prepareScannerSound();
@@ -111,8 +97,7 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
       stopCamera();
       setMessage('Aponte a câmera para um código de barras ou QR.');
       const { BrowserMultiFormatReader } = await import('@zxing/browser');
-      const reader = new BrowserMultiFormatReader();
-      let readingLocked = false;
+      const reader = new BrowserMultiFormatReader(undefined, { delayBetweenScanAttempts: 100, delayBetweenScanSuccess: 100 });
       let lastCode = '';
       let lastSeen = 0;
       scannerControlsRef.current = await reader.decodeFromConstraints(
@@ -120,26 +105,24 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
         videoRef.current,
         result => {
           if (!result) return;
+          setScanBounds(scannerBounds(result, videoRef.current));
+          clearTimeout(scanTimerRef.current);
+          scanTimerRef.current = setTimeout(() => setScanBounds(null), 650);
           const now = Date.now();
           const repeated = result.getText() === lastCode && now - lastSeen < 1500;
           lastSeen = now;
-          if (readingLocked || repeated) return;
+          if (repeated) return;
           lastCode = result.getText();
-          readingLocked = true;
           const raw = result.getText();
           const parsed = extractData(raw);
           onSku(parsed.sku || raw);
           if (parsed.quantity) onQuantity(parsed.quantity);
           setDetectedCode(parsed.sku || raw);
-          showDetectedArea(result);
           void playScannerSound().then(played => {
             if (!played) setMessage(current => current + ' Não foi possível reproduzir o bip. Confira a permissão de som do navegador.');
           });
           setMessage(parsed.quantity ? `Código e quantidade ${parsed.quantity} identificados.` : `Código ${parsed.sku || raw} identificado e aplicado ao SKU.`);
-          scanTimerRef.current = setTimeout(() => {
-            setScanBounds(null);
-            readingLocked = false;
-          }, 1700);
+           readingLocked = false;
         },
       );
       streamRef.current = videoRef.current?.srcObject;
