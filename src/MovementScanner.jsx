@@ -77,7 +77,7 @@ export default function MovementScanner({ onCode }) {
           const selected = onCode(code);
           showDetectedArea(result);
           void playScannerSound().then(played => {
-            if (!played) setMessage(current => current + ' Som bloqueado: toque em Testar som.');
+            if (!played) setMessage(current => current + ' Não foi possível reproduzir o bip. Confira a permissão de som do navegador.');
           });
           setMessage(selected ? `${selected.name} selecionado pelo SKU ${code}.` : `Nenhum produto cadastrado com o SKU ${code}.`);
           timerRef.current = setTimeout(() => {
@@ -97,7 +97,6 @@ export default function MovementScanner({ onCode }) {
       <span>Encontre o produto pelo código SKU</span>
       <button type="button" onClick={open ? close : startCamera}>{open ? 'Fechar câmera' : 'Ler SKU com a câmera'}</button>
     </div>
-    <button type="button" onClick={() => { prepareScannerSound(); void playScannerSound(true).then(ok => setMessage(ok ? 'Bip de mercado reproduzido.' : 'Não foi possível reproduzir o som neste navegador.')); }}>Testar som</button>
     {open && <div className="camera-preview movement-camera">
       <video ref={videoRef} muted playsInline className="cam" />
       <div className="camera-guide" aria-hidden="true"><span /></div>
