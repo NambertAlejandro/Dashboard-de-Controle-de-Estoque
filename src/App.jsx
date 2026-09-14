@@ -80,6 +80,16 @@ function Modal({ title, onClose, children }) {
     </div>);
 }
 
+function CampoSenha({ id, ...props }) {
+    const [visivel, setVisivel] = useState(false);
+    return <div className="password-input">
+      <input id={id} {...props} type={visivel ? 'text' : 'password'} />
+      <button type="button" onClick={() => setVisivel(!visivel)} aria-label={visivel ? 'Ocultar senha' : 'Mostrar senha'}>
+        {visivel ? 'Ocultar' : 'Mostrar'}
+      </button>
+    </div>;
+}
+
 function TrocarSenhaModal({ onClose }) {
     const [senhaAtual, setSenhaAtual] = useState('');
     const [novaSenha, setNovaSenha] = useState('');
@@ -106,11 +116,11 @@ function TrocarSenhaModal({ onClose }) {
     return <Modal title="Trocar senha" onClose={onClose}>
       <form className="password-form" onSubmit={enviar}>
         <label htmlFor="senha-atual">Senha atual</label>
-        <input id="senha-atual" type="password" value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} autoComplete="current-password" required autoFocus />
+        <CampoSenha id="senha-atual" value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} autoComplete="current-password" required autoFocus />
         <label htmlFor="nova-senha">Nova senha</label>
-        <input id="nova-senha" type="password" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} autoComplete="new-password" minLength="6" pattern=".*[0-9].*" title="Use pelo menos 6 caracteres e um número" required />
+        <CampoSenha id="nova-senha" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} autoComplete="new-password" minLength="6" pattern=".*[0-9].*" title="Use pelo menos 6 caracteres e um número" required />
         <label htmlFor="confirmar-nova-senha">Confirmar nova senha</label>
-        <input id="confirmar-nova-senha" type="password" value={confirmacao} onChange={e => setConfirmacao(e.target.value)} autoComplete="new-password" minLength="6" pattern=".*[0-9].*" required />
+        <CampoSenha id="confirmar-nova-senha" value={confirmacao} onChange={e => setConfirmacao(e.target.value)} autoComplete="new-password" minLength="6" pattern=".*[0-9].*" required />
         <p className="password-help">Use pelo menos 6 caracteres e um número.</p>
         {mensagem && <p className="password-message" role="status">{mensagem}</p>}
         <div className="password-actions">

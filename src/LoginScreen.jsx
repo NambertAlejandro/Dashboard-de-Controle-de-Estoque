@@ -2,6 +2,16 @@ import { useState } from 'react';
 import { criarConta, entrar, redefinirSenha, solicitarCodigo } from './api.js';
 import stocklyLogo from './assets/stockly-logo.svg';
 
+function CampoSenha(props) {
+  const [visivel, setVisivel] = useState(false);
+  return <div className="password-input">
+    <input {...props} type={visivel ? 'text' : 'password'} />
+    <button type="button" onClick={() => setVisivel(!visivel)} aria-label={visivel ? 'Ocultar senha' : 'Mostrar senha'}>
+      {visivel ? 'Ocultar' : 'Mostrar'}
+    </button>
+  </div>;
+}
+
 export default function LoginScreen({ onSuccess }) {
   const [modo, setModo] = useState('entrar');
   const [email, setEmail] = useState('');
@@ -72,12 +82,12 @@ export default function LoginScreen({ onSuccess }) {
 
         {modo !== 'recuperar' && <>
           <label htmlFor="senha">{modo === 'codigo' ? 'Nova senha' : 'Senha'}</label>
-          <input id="senha" type="password" value={senha} onChange={event => setSenha(event.target.value)} autoComplete={modo === 'entrar' ? 'current-password' : 'new-password'} minLength={modo === 'entrar' ? undefined : 6} pattern={modo === 'entrar' ? undefined : '.*[0-9].*'} title="Use pelo menos 6 caracteres e um número" required />
+          <CampoSenha id="senha" value={senha} onChange={event => setSenha(event.target.value)} autoComplete={modo === 'entrar' ? 'current-password' : 'new-password'} minLength={modo === 'entrar' ? undefined : 6} pattern={modo === 'entrar' ? undefined : '.*[0-9].*'} title="Use pelo menos 6 caracteres e um número" required />
         </>}
 
         {(modo === 'criar' || modo === 'codigo') && <>
           <label htmlFor="confirmar-senha">Confirmar senha</label>
-          <input id="confirmar-senha" type="password" value={confirmarSenha} onChange={event => setConfirmarSenha(event.target.value)} autoComplete="new-password" minLength="6" pattern=".*[0-9].*" required />
+          <CampoSenha id="confirmar-senha" value={confirmarSenha} onChange={event => setConfirmarSenha(event.target.value)} autoComplete="new-password" minLength="6" pattern=".*[0-9].*" required />
         </>}
 
         {erro && <p className="login-error" role="alert">{erro}</p>}
