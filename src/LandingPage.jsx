@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import logo from './Design sem nome (1).svg → stockly-logo.svg.svg';
 import hero1 from './16_12_32.png → hero-1.png.png';
-import hero2 from './16_12_26.png → hero-6.png.png';
 import hero3 from './16_12_19.png → hero-5.png.png';
 import hero4 from './16_12_11.png → hero-4.png.png';
 import hero5 from './16_12_05.png → hero-3.png.png';
 import hero6 from './16_11_58.png → hero-2.png.png';
 import './landing.css';
 
-const fotos = [hero1, hero2, hero3, hero4, hero5, hero6];
+const fotos = [hero1, hero3, hero4, hero5, hero6];
 
 function BotaoComecar({ onStart }) {
   return <button className="landing-cta" onClick={onStart}>Começar agora</button>;
