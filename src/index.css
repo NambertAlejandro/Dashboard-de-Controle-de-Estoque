@@ -125,3 +125,7 @@ body {
   .movement-scanner-actions { align-items: stretch; flex-direction: column; }
   .movement-scanner-actions button { width: 100%; }
 }
+
+.saving-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: #ffffffaa; color: #166534; font-weight: 600; touch-action: none; }
+.api-error { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); width: min(92vw, 600px); z-index: 1100; padding: 16px; border: 1px solid #fecaca; border-radius: 12px; background: #fff1f2; color: #991b1b; box-shadow: 0 6px 24px #0002; }
+.api-error button { margin: 10px 12px 0 0; padding: 6px; text-decoration: underline; }

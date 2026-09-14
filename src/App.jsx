@@ -1,31 +1,10 @@
+import { carregarEstoque, salvarProduto, request } from './api.js';
 import { useState, useEffect, useRef } from 'react';
 import ItemForm from './ItemForm.jsx';
 import HistoryScreen from './HistoryScreen.jsx';
 import MovementScanner from './MovementScanner.jsx';
-import { ITEM_TYPES, isStockItem, statusFor, applyMovement } from './inventory.js';
+import { ITEM_TYPES, isStockItem, statusFor, hoje } from './inventory.js';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-// ─── Seed Data ────────────────────────────────────────────────────────────────
-const initialProducts = [
-    { id: 1, name: 'Arroz Tipo 1 (5kg)', category: 'Grãos', quantity: 48, price: 24.90, minStock: 20, status: 'Normal' },
-    { id: 2, name: 'Feijão Carioca (1kg)', category: 'Grãos', quantity: 6, price: 8.50, minStock: 15, status: 'Crítico' },
-    { id: 3, name: 'Azeite Extra Virgem (500ml)', category: 'Óleos', quantity: 14, price: 32.00, minStock: 10, status: 'Normal' },
-    { id: 4, name: 'Leite Integral (1L)', category: 'Laticínios', quantity: 9, price: 5.80, minStock: 30, status: 'Crítico' },
-    { id: 5, name: 'Macarrão Espaguete (500g)', category: 'Massas', quantity: 31, price: 4.20, minStock: 20, status: 'Normal' },
-    { id: 6, name: 'Açúcar Cristal (1kg)', category: 'Condimentos', quantity: 12, price: 3.90, minStock: 25, status: 'Baixo' },
-    { id: 7, name: 'Café Moído (500g)', category: 'Bebidas', quantity: 7, price: 18.50, minStock: 20, status: 'Crítico' },
-    { id: 8, name: 'Óleo de Soja (900ml)', category: 'Óleos', quantity: 22, price: 7.30, minStock: 15, status: 'Normal' },
-    { id: 9, name: 'Sal Refinado (1kg)', category: 'Condimentos', quantity: 18, price: 2.10, minStock: 20, status: 'Baixo' },
-    { id: 10, name: 'Farinha de Trigo (1kg)', category: 'Grãos', quantity: 26, price: 5.50, minStock: 15, status: 'Normal' },
-];
-const initialMovements = [
-    { id: 1, product: 'Arroz Tipo 1 (5kg)', type: 'Entrada', quantity: 24, date: '2026-07-28' },
-    { id: 2, product: 'Leite Integral (1L)', type: 'Saída', quantity: 6, date: '2026-07-28' },
-    { id: 3, product: 'Café Moído (500g)', type: 'Saída', quantity: 4, date: '2026-07-27' },
-    { id: 4, product: 'Feijão Carioca (1kg)', type: 'Saída', quantity: 8, date: '2026-07-27' },
-    { id: 5, product: 'Açúcar Cristal (1kg)', type: 'Entrada', quantity: 10, date: '2026-07-26' },
-    { id: 6, product: 'Macarrão Espaguete (500g)', type: 'Entrada', quantity: 20, date: '2026-07-25' },
-    { id: 7, product: 'Óleo de Soja (900ml)', type: 'Saída', quantity: 3, date: '2026-07-25' },
-];
 const itemLabel = type => ITEM_TYPES.find(t => t.id === type)?.label || 'Revenda';
 const PIE_COLORS = ['#16a34a', '#2563eb', '#f59e0b', '#ec4899', '#8b5cf6', '#0ea5e9'];
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -112,11 +91,11 @@ function DeleteItemModal({ product, onClose, onConfirm }) {
           <div>
             <p className="text-sm font-semibold text-slate-800">{multiple ? `Tem certeza que deseja excluir ${products.length} itens?` : 'Tem certeza que deseja excluir este item?'}</p>
             <p className="mt-1 text-sm text-slate-600">
-              {multiple ? 'Todos os itens selecionados serão removidos do estoque desta sessão.' : <><strong>{products[0].name}</strong> será removido do estoque desta sessão.</>}
+              {multiple ? 'Todos os itens selecionados serão removidos do estoque.' : <><strong>{products[0].name}</strong> será removido do estoque.</>}
             </p>
           </div>
         </div>
-        <p className="text-xs text-slate-500">Se necessário, esta ação poderá ser desfeita na aba Histórico.</p>
+        <p className="text-xs text-slate-500">Os lotes e as movimentações destes itens também serão removidos. Você poderá desfazer esta ação pelo Histórico.</p>
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-lg text-sm text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors">
             Cancelar
@@ -355,7 +334,7 @@ function MovimentacoesScreen({ products, movements, onAdd }) {
         product: String(products[0]?.id ?? ''),
         type: 'Entrada',
         quantity: '',
-        date: new Date().toISOString().slice(0, 10),
+        date: hoje(),
     });
     const [error, setError] = useState('');
     const selectProductBySku = code => {
@@ -365,12 +344,12 @@ function MovimentacoesScreen({ products, movements, onAdd }) {
         setError('');
         return product;
     };
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!form.product || !form.quantity)
             return;
         const product = products.find(p => String(p.id) === form.product);
-        const result = onAdd({ productId: product?.id, type: form.type, quantity: Number(form.quantity), date: form.date });
+        const result = await onAdd({ productId: product?.id, type: form.type, quantity: Number(form.quantity), date: form.date });
         if (result !== true) {
             setError(result);
             return;
@@ -626,8 +605,8 @@ function Sidebar({ active, onNavigate, alertCount }) {
 // ─── App Root ─────────────────────────────────────────────────────────────────
 export default function App() {
     const [screen, setScreen] = useState('estoque');
-    const [products, setProducts] = useState(() => initialProducts.map((p, index) => ({ ...p, itemType: 'resale', sku: `PROD-${String(index + 1).padStart(3, '0')}`, unit: 'un', quantityReceived: p.quantity, lostQuantity: 0, lotPrice: p.quantity * p.price, unitPrice: p.price, lotNumber: '', expirationDate: '', supplier: '', location: '', notes: '', status: statusFor(p.quantity, p.minStock) })));
-    const [movements, setMovements] = useState(() => initialMovements.map(m => ({ ...m, productId: initialProducts.find(p => p.name === m.product)?.id })));
+    const [products, setProducts] = useState([]);
+    const [movements, setMovements] = useState([]);
     const [enabledTypes, setEnabledTypes] = useState(ITEM_TYPES.map(t => t.id));
     const [editingProduct, setEditingProduct] = useState(null);
     const [deletingProduct, setDeletingProduct] = useState(null);
@@ -635,87 +614,89 @@ export default function App() {
     const [showNovoProduto, setShowNovoProduto] = useState(false);
     const [reporProduct, setReporProduct] = useState(null);
     const [activities, setActivities] = useState([]);
+    const [undoing, setUndoing] = useState(null);
     const alertCount = products.filter(p => isStockItem(p) && p.status !== 'Normal').length;
-    const computeStatus = (qty, min) => qty <= 0 || qty < min * 0.5 ? 'Crítico' : qty < min ? 'Baixo' : 'Normal';
-    const recordActivity = (kind, description) => {
-        setActivities(current => [{ id: crypto.randomUUID(), kind, description, createdAt: new Date().toISOString(), beforeProducts: products, beforeMovements: movements, undone: false }, ...current]);
+    const [loading, setLoading] = useState(true);
+    const [busy, setBusy] = useState(false);
+    const [apiError, setApiError] = useState('');
+    const saving = useRef(false);
+    const recarregar = async () => {
+        const dados = await carregarEstoque();
+        setProducts(dados.products);
+        setMovements(dados.movements);
+        setActivities(dados.activities);
     };
-    const handleDelete = () => {
-        if (!deletingProduct)
-            return;
-        const targets = Array.isArray(deletingProduct) ? deletingProduct : [deletingProduct];
-        const targetIds = new Set(targets.map(product => product.id));
-        recordActivity('delete', targets.length === 1 ? `Item “${targets[0].name}” excluído do estoque.` : `${targets.length} itens excluídos do estoque.`);
-        setProducts(ps => ps.filter(p => !targetIds.has(p.id)));
-        setDeletingProduct(null);
+    const iniciar = async () => {
+        setLoading(true);
+        setApiError('');
+        try { await recarregar(); } catch (erro) { setApiError(erro.message); }
+        finally { setLoading(false); }
     };
-    const handleAddMovement = (m) => {
+    useEffect(() => { iniciar(); }, []);
+    const executar = async (operacao) => {
+        if (saving.current) return 'Aguarde a operação atual.';
+        saving.current = true;
+        setBusy(true);
+        setApiError('');
         try {
-            const next = applyMovement(products, m);
-            const product = products.find(p => p.id === m.productId);
-            recordActivity('movement', `${m.type} de ${m.quantity} ${product.unit || 'un'} em “${product.name}”.`);
-            setProducts(next);
-            setMovements(ms => [{ ...m, product: product.name, id: crypto.randomUUID() }, ...ms]);
+            await operacao();
+            // Não reenviar uma gravação bem-sucedida caso só a atualização da tela falhe.
+            try { await recarregar(); } catch (erro) { setApiError('Salvo no banco, mas a tela não atualizou. ' + erro.message); }
             return true;
-        }
-        catch (error) {
-            return error.message;
-        }
+        } catch (erro) {
+            try { await recarregar(); } catch {}
+            setApiError(erro.message);
+            return erro.message;
+        } finally { saving.current = false; setBusy(false); }
     };
-    const handleNovoProduto = (data) => {
-        recordActivity(editingProduct ? 'edit' : 'create', editingProduct ? `Item “${editingProduct.name}” editado.` : `Item “${data.name}” cadastrado.`);
-        const newProduct = {
-            ...data,
-            id: editingProduct?.id || crypto.randomUUID(),
-            status: computeStatus(data.quantity, data.minStock),
-        };
-        setProducts(ps => editingProduct ? ps.map(p => p.id === editingProduct.id ? newProduct : p) : [...ps, newProduct]);
-        setEditingProduct(null);
-        setShowNovoProduto(false);
+    const handleDelete = async () => {
+        const targets = Array.isArray(deletingProduct) ? deletingProduct : [deletingProduct];
+        const resultado = await executar(async () => {
+            await request('/produtos/excluir-selecionados','POST',{ids:targets.map(produto => produto.id)});
+        });
+        if (resultado === true) setDeletingProduct(null);
     };
-    const handleImportMany = importedProducts => {
-        if (!importedProducts.length)
-            return;
-        const newProducts = importedProducts.map(data => ({
-            ...data,
-            id: crypto.randomUUID(),
-            quantity: Number(data.quantityReceived || 0) - Number(data.lostQuantity || 0),
-            price: Number(data.unitPrice || 0),
-            unitPrice: Number(data.unitPrice || 0),
-            lotPrice: Number(data.lotPrice || 0),
-            minStock: Number(data.minStock || 0),
-            quantityReceived: Number(data.quantityReceived || 0),
-            lostQuantity: Number(data.lostQuantity || 0),
-            status: computeStatus(Number(data.quantityReceived || 0) - Number(data.lostQuantity || 0), Number(data.minStock || 0)),
-        }));
-        recordActivity('import', `${newProducts.length} itens importados de um PDF.`);
-        setProducts(current => [...current, ...newProducts]);
-        setEditingProduct(null);
-        setShowNovoProduto(false);
-        setScreen('estoque');
+    const handleAddMovement = async m => await executar(() => request('/movimentacoes-estoque','POST', {
+        produto_id:m.productId, quantidade:m.quantity, tipo:m.type, data_movimentacao:m.date
+    }));
+    const handleNovoProduto = async data => {
+        const resultado = await executar(() => salvarProduto(data,editingProduct));
+        if (resultado === true) { setEditingProduct(null); setShowNovoProduto(false); }
+        return resultado;
     };
-    const handleUndo = activityId => {
-        const latest = activities.find(activity => !activity.undone);
-        if (!latest || latest.id !== activityId)
-            return;
-        setProducts(latest.beforeProducts);
-        setMovements(latest.beforeMovements);
-        setActivities(current => current.map(activity => activity.id === activityId ? { ...activity, undone: true } : activity));
+    const handleImportMany = async importedProducts => {
+        let salvos = 0;
+        const resultado = await executar(async () => {
+            for (const data of importedProducts) {
+                try { await salvarProduto(data); salvos++; }
+                catch (erro) { throw new Error(salvos + ' item(ns) salvo(s). Falha em ' + data.name + ': ' + erro.message + ' Selecione apenas os itens restantes para tentar novamente.'); }
+            }
+        });
+        if (resultado === true) { setShowNovoProduto(false); setScreen('estoque'); }
+        return resultado;
     };
-    const handleRepor = (productId, quantity) => {
-        handleAddMovement({ productId, quantity, type: 'Entrada', date: new Date().toISOString().slice(0, 10) });
-        setReporProduct(null);
+    const handleUndo = async () => {
+        const resultado = await executar(() => request('/historico-atividades/' + undoing.id + '/desfazer','POST'));
+        if (resultado === true) setUndoing(null);
+    };
+    const handleRepor = async (productId, quantity) => {
+        const resultado = await handleAddMovement({ productId, quantity, type:'Entrada', date:hoje() });
+        if (resultado === true) setReporProduct(null);
     };
     return (<div className="app-shell flex flex-col lg:flex-row h-dvh bg-slate-50 overflow-hidden">
+      {busy && <div className="saving-overlay" role="status">Salvando…</div>}
+      {apiError && <div className="api-error" role="alert">{apiError}<button onClick={() => { setApiError(''); iniciar(); }}>Atualizar dados</button><button onClick={() => setApiError('')}>Fechar</button></div>}
       <Sidebar active={screen} onNavigate={setScreen} alertCount={alertCount}/>
       <main className="flex-1 min-w-0 min-h-0 overflow-y-auto">
-        {screen === 'estoque' && <EstoqueScreen products={products} onDelete={setDeletingProduct} onDeleteMany={setDeletingProduct} onView={setViewingProduct} enabledTypes={enabledTypes} onToggleType={id => setEnabledTypes(ts => ts.includes(id) ? ts.filter(t => t !== id) : [...ts, id])} onEdit={p => { setEditingProduct(p); setShowNovoProduto(true); }} onNewProduct={() => { setEditingProduct(null); setShowNovoProduto(true); }}/>} 
+        {loading && <p className="p-4" role="status">Carregando estoque…</p>}
+        {!loading && screen === 'estoque' && <EstoqueScreen products={products} onDelete={setDeletingProduct} onDeleteMany={setDeletingProduct} onView={setViewingProduct} enabledTypes={enabledTypes} onToggleType={id => setEnabledTypes(ts => ts.includes(id) ? ts.filter(t => t !== id) : [...ts, id])} onEdit={p => { setEditingProduct(p); setShowNovoProduto(true); }} onNewProduct={() => { setEditingProduct(null); setShowNovoProduto(true); }}/>} 
         {screen === 'movimentacoes' && <MovimentacoesScreen products={products.filter(isStockItem)} movements={movements} onAdd={handleAddMovement}/>}
         {screen === 'alertas' && <AlertasScreen products={products} onRepor={setReporProduct}/>}
         {screen === 'relatorios' && <RelatoriosScreen products={products}/>}
-        {screen === 'historico' && <HistoryScreen activities={activities} onUndo={handleUndo}/>}
+        {screen === 'historico' && <HistoryScreen activities={activities} onUndo={id => setUndoing(activities.find(a => a.id === id))}/>}
       </main>
 
+      {undoing && <Modal title="Desfazer atividade" onClose={() => setUndoing(null)}><p className="text-sm text-slate-600">Deseja desfazer: {undoing.description}? Os dados dos itens envolvidos voltarão ao estado anterior.</p><div className="flex gap-3 mt-5"><button className="px-4 py-2 border rounded-lg" onClick={() => setUndoing(null)}>Cancelar</button><button className="px-4 py-2 bg-green-600 text-white rounded-lg" onClick={handleUndo}>Confirmar desfazer</button></div></Modal>}
       {showNovoProduto && (<Modal title={editingProduct ? "Editar item" : "Novo item"} onClose={() => setShowNovoProduto(false)}><ItemForm item={editingProduct} enabledTypes={enabledTypes} categories={[...new Set(products.map(p => p.category))]} onCancel={() => setShowNovoProduto(false)} onSave={handleNovoProduto} onImportMany={handleImportMany}/></Modal>)}
       {deletingProduct && <DeleteItemModal product={deletingProduct} onClose={() => setDeletingProduct(null)} onConfirm={handleDelete}/>} 
       {viewingProduct && <ProductDetailsModal product={viewingProduct} onClose={() => setViewingProduct(null)} onEdit={() => { setEditingProduct(viewingProduct); setViewingProduct(null); setShowNovoProduto(true); }}/>} 

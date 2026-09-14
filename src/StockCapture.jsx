@@ -198,7 +198,7 @@ export default function StockCapture({ onQuantity, onSku, onImportData, onImport
         <div className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold text-slate-700">{product.name}</span><span className="mt-0.5 block text-xs text-slate-500">{product.sku || 'Sem SKU'} · {product.quantityReceived} {product.unit} · lote R$ {Number(product.lotPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></div>
         <button type="button" onClick={() => { onImportData(product); setMessage(`Dados de ${product.name} preenchidos automaticamente. Confira antes de cadastrar.`); }} className="rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">Preencher</button>
       </div>)}
-      <button type="button" disabled={!selected.length} onClick={() => onImportMany(selected.map(index => candidates[index]))} className="w-full rounded-lg bg-green-600 px-3 py-2.5 text-xs font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50">Importar selecionados ({selected.length})</button>
+      <button type="button" disabled={!selected.length} onClick={async () => { const resultado = await onImportMany(selected.map(index => candidates[index])); if (resultado !== true) setMessage(resultado); }} className="w-full rounded-lg bg-green-600 px-3 py-2.5 text-xs font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50">Importar selecionados ({selected.length})</button>
     </div>}
   </div>;
 }

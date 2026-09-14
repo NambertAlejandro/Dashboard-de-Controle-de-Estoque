@@ -19,3 +19,9 @@ export function applyMovement(products, movement) {
     return { ...p, quantity, status: statusFor(quantity, p.minStock) };
   });
 }
+
+// Data do aparelho, sem adiantar o dia por causa do fuso UTC.
+export function hoje() {
+  const data = new Date();
+  return [data.getFullYear(), String(data.getMonth() + 1).padStart(2, '0'), String(data.getDate()).padStart(2, '0')].join('-');
+}

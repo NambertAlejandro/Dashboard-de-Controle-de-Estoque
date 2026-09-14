@@ -24,13 +24,13 @@ export default function ItemForm({ item, enabledTypes, categories, onCancel, onS
   const type = ITEM_TYPES.find(option => option.id === form.itemType);
   const set = key => event => setForm(current => ({ ...current, [key]: event.target.value }));
   const available = useMemo(() => Math.max(0, Number(form.quantityReceived || 0) - Number(form.lostQuantity || 0)), [form.quantityReceived, form.lostQuantity]);
-  const submit = event => {
+  const submit = async event => {
     event.preventDefault();
     if (!type || !form.name.trim() || !form.sku.trim() || !form.category.trim()) { setActiveTab('simplified'); return setError('Preencha o nome, o código/SKU, a categoria e o tipo do item.'); }
     const numbers = type.stock ? [form.quantityReceived, form.lostQuantity, form.lotPrice, form.unitPrice, form.minStock] : [form.unitPrice];
     if (numbers.some(value => value === '' || !Number.isFinite(Number(value)) || Number(value) < 0)) { setActiveTab('simplified'); return setError('Informe valores válidos, iguais ou maiores que zero.'); }
     if (type.stock && Number(form.lostQuantity) > Number(form.quantityReceived)) { setActiveTab('simplified'); return setError('A quantidade perdida não pode ser maior que a quantidade recebida.'); }
-    onSave({
+    const resultado = await onSave({
       name: form.name.trim(), sku: form.sku.trim(), category: form.category.trim(), itemType: form.itemType,
       unit: form.unit.trim() || 'un', quantity: type.stock ? (item ? item.quantity : available) : 0,
       quantityReceived: type.stock ? Number(form.quantityReceived) : 0, lostQuantity: type.stock ? Number(form.lostQuantity) : 0,
@@ -38,6 +38,7 @@ export default function ItemForm({ item, enabledTypes, categories, onCancel, onS
       minStock: type.stock ? Number(form.minStock) : 0, lotNumber: form.lotNumber.trim(),
       expirationDate: form.expirationDate, supplier: form.supplier.trim(), location: form.location.trim(), notes: form.notes.trim(),
     });
+    if (resultado !== true) setError(resultado || 'Não foi possível salvar.');
   };
 
   return <form onSubmit={submit} className="space-y-5">
