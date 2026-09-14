@@ -29,6 +29,16 @@ export async function entrar(login, senha) {
   return resultado.usuario;
 }
 
+export async function criarConta(login, senha) {
+  const resultado = await request('/criar-conta', 'POST', { login, senha });
+  localStorage.setItem('estoque_token', resultado.token);
+  return resultado.usuario;
+}
+
+export async function trocarSenha(senhaAtual, novaSenha) {
+  return await request('/trocar-senha', 'PUT', { senhaAtual, novaSenha });
+}
+
 export function sair() {
   localStorage.removeItem('estoque_token');
 }

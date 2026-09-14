@@ -1,4 +1,4 @@
-import { carregarEstoque, salvarProduto, request } from './api.js';
+import { carregarEstoque, salvarProduto, request, trocarSenha } from './api.js';
 import { useState, useEffect, useRef } from 'react';
 import ItemForm from './ItemForm.jsx';
 import HistoryScreen from './HistoryScreen.jsx';
@@ -77,6 +77,47 @@ function Modal({ title, onClose, children }) {
         <div className="px-6 py-5">{children}</div>
       </div>
     </div>);
+}
+
+function TrocarSenhaModal({ onClose }) {
+    const [senhaAtual, setSenhaAtual] = useState('');
+    const [novaSenha, setNovaSenha] = useState('');
+    const [confirmacao, setConfirmacao] = useState('');
+    const [mensagem, setMensagem] = useState('');
+    const [salvando, setSalvando] = useState(false);
+    const enviar = async event => {
+        event.preventDefault();
+        setMensagem('');
+        if (novaSenha !== confirmacao) return setMensagem('As novas senhas precisam ser iguais.');
+        setSalvando(true);
+        try {
+            const resultado = await trocarSenha(senhaAtual, novaSenha);
+            setMensagem(resultado.mensagem);
+            setSenhaAtual('');
+            setNovaSenha('');
+            setConfirmacao('');
+        } catch (erro) {
+            setMensagem(erro.message);
+        } finally {
+            setSalvando(false);
+        }
+    };
+    return <Modal title="Trocar senha" onClose={onClose}>
+      <form className="password-form" onSubmit={enviar}>
+        <label htmlFor="senha-atual">Senha atual</label>
+        <input id="senha-atual" type="password" value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} autoComplete="current-password" required autoFocus />
+        <label htmlFor="nova-senha">Nova senha</label>
+        <input id="nova-senha" type="password" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} autoComplete="new-password" minLength="6" required />
+        <label htmlFor="confirmar-nova-senha">Confirmar nova senha</label>
+        <input id="confirmar-nova-senha" type="password" value={confirmacao} onChange={e => setConfirmacao(e.target.value)} autoComplete="new-password" minLength="6" required />
+        <p className="password-help">Use pelo menos 6 caracteres e evite senhas conhecidas, como adm1.</p>
+        {mensagem && <p className="password-message" role="status">{mensagem}</p>}
+        <div className="password-actions">
+          <button type="button" onClick={onClose}>Cancelar</button>
+          <button type="submit" disabled={salvando}>{salvando ? 'Salvando…' : 'Salvar senha'}</button>
+        </div>
+      </form>
+    </Modal>;
 }
 
 function DeleteItemModal({ product, onClose, onConfirm }) {
@@ -565,7 +606,7 @@ const navItems = [
     { key: 'relatorios', label: 'Relatórios', Icon: IconChart },
     { key: 'historico', label: 'Histórico', Icon: IconHistory },
 ];
-function Sidebar({ active, onNavigate, alertCount, onLogout }) {
+function Sidebar({ active, onNavigate, alertCount, onLogout, onChangePassword }) {
     return (<aside className="app-sidebar w-full lg:w-56 flex-shrink-0 bg-white border-r border-slate-100 flex flex-col lg:h-full">
       {/* Logo */}
       <div className="px-5 py-6 border-b border-slate-100">
@@ -598,6 +639,7 @@ function Sidebar({ active, onNavigate, alertCount, onLogout }) {
 
       {/* Footer */}
       <div className="px-5 py-4 border-t border-slate-100">
+        <button type="button" onClick={onChangePassword} className="mb-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Trocar senha</button>
         <button type="button" onClick={onLogout} className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Sair</button>
         <p className="text-xs text-slate-400">Versão 1.0.0</p>
       </div>
@@ -613,6 +655,7 @@ export default function App({ onLogout }) {
     const [deletingProduct, setDeletingProduct] = useState(null);
     const [viewingProduct, setViewingProduct] = useState(null);
     const [showNovoProduto, setShowNovoProduto] = useState(false);
+    const [showTrocarSenha, setShowTrocarSenha] = useState(false);
     const [reporProduct, setReporProduct] = useState(null);
     const [activities, setActivities] = useState([]);
     const [undoing, setUndoing] = useState(null);
@@ -687,7 +730,7 @@ export default function App({ onLogout }) {
     return (<div className="app-shell flex flex-col lg:flex-row h-dvh bg-slate-50 overflow-hidden">
       {busy && <div className="saving-overlay" role="status">Salvando…</div>}
       {apiError && <div className="api-error" role="alert">{apiError}<button onClick={() => { setApiError(''); iniciar(); }}>Atualizar dados</button><button onClick={() => setApiError('')}>Fechar</button></div>}
-      <Sidebar active={screen} onNavigate={setScreen} alertCount={alertCount} onLogout={onLogout}/>
+      <Sidebar active={screen} onNavigate={setScreen} alertCount={alertCount} onLogout={onLogout} onChangePassword={() => setShowTrocarSenha(true)}/>
       <main className="flex-1 min-w-0 min-h-0 overflow-y-auto">
         {loading && <p className="p-4" role="status">Carregando estoque…</p>}
         {!loading && screen === 'estoque' && <EstoqueScreen products={products} onDelete={setDeletingProduct} onDeleteMany={setDeletingProduct} onView={setViewingProduct} enabledTypes={enabledTypes} onToggleType={id => setEnabledTypes(ts => ts.includes(id) ? ts.filter(t => t !== id) : [...ts, id])} onEdit={p => { setEditingProduct(p); setShowNovoProduto(true); }} onNewProduct={() => { setEditingProduct(null); setShowNovoProduto(true); }}/>} 
@@ -702,5 +745,6 @@ export default function App({ onLogout }) {
       {deletingProduct && <DeleteItemModal product={deletingProduct} onClose={() => setDeletingProduct(null)} onConfirm={handleDelete}/>} 
       {viewingProduct && <ProductDetailsModal product={viewingProduct} onClose={() => setViewingProduct(null)} onEdit={() => { setEditingProduct(viewingProduct); setViewingProduct(null); setShowNovoProduto(true); }}/>} 
       {reporProduct && (<ModalRepor product={reporProduct} onClose={() => setReporProduct(null)} onConfirm={handleRepor}/>)}
+      {showTrocarSenha && <TrocarSenhaModal onClose={() => setShowTrocarSenha(false)}/>}
     </div>);
 }
