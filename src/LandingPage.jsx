@@ -29,14 +29,7 @@ export default function LandingPage({ onStart }) {
     <main className="landing-page">
       <section className="landing-hero">
         <div className="landing-carousel" aria-hidden="true">
-          {fotos.map((foto, indice) => (
-            <img
-              key={foto}
-              src={foto}
-              alt=""
-              className={indice === fotoAtual ? 'active' : ''}
-            />
-          ))}
+          <img key={fotos[fotoAtual]} src={fotos[fotoAtual]} alt="" className="active" />
         </div>
         <div className="landing-hero-shade" />
 
@@ -103,10 +96,10 @@ export default function LandingPage({ onStart }) {
           </p>
         </div>
         <div className="landing-photo-grid">
-          <figure><img src={hero3} alt="Controle de estoque em uma adega" /><figcaption>Adegas e lojas</figcaption></figure>
-          <figure><img src={hero5} alt="Controle de estoque em um restaurante" /><figcaption>Restaurantes</figcaption></figure>
-          <figure><img src={hero6} alt="Controle de estoque em um açougue" /><figcaption>Açougues e mercados</figcaption></figure>
-          <figure><img src={hero4} alt="Pessoa conferindo produtos no celular" /><figcaption>Depósitos e distribuidores</figcaption></figure>
+          <figure><img loading="lazy" src={hero3} alt="Controle de estoque em uma adega" /><figcaption>Adegas e lojas</figcaption></figure>
+          <figure><img loading="lazy" src={hero5} alt="Controle de estoque em um restaurante" /><figcaption>Restaurantes</figcaption></figure>
+          <figure><img loading="lazy" src={hero6} alt="Controle de estoque em um açougue" /><figcaption>Açougues e mercados</figcaption></figure>
+          <figure><img loading="lazy" src={hero4} alt="Pessoa conferindo produtos no celular" /><figcaption>Depósitos e distribuidores</figcaption></figure>
         </div>
       </section>
 
