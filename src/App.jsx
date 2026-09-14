@@ -565,7 +565,7 @@ const navItems = [
     { key: 'relatorios', label: 'Relatórios', Icon: IconChart },
     { key: 'historico', label: 'Histórico', Icon: IconHistory },
 ];
-function Sidebar({ active, onNavigate, alertCount }) {
+function Sidebar({ active, onNavigate, alertCount, onLogout }) {
     return (<aside className="app-sidebar w-full lg:w-56 flex-shrink-0 bg-white border-r border-slate-100 flex flex-col lg:h-full">
       {/* Logo */}
       <div className="px-5 py-6 border-b border-slate-100">
@@ -598,12 +598,13 @@ function Sidebar({ active, onNavigate, alertCount }) {
 
       {/* Footer */}
       <div className="px-5 py-4 border-t border-slate-100">
+        <button type="button" onClick={onLogout} className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Sair</button>
         <p className="text-xs text-slate-400">Versão 1.0.0</p>
       </div>
     </aside>);
 }
 // ─── App Root ─────────────────────────────────────────────────────────────────
-export default function App() {
+export default function App({ onLogout }) {
     const [screen, setScreen] = useState('estoque');
     const [products, setProducts] = useState([]);
     const [movements, setMovements] = useState([]);
@@ -686,7 +687,7 @@ export default function App() {
     return (<div className="app-shell flex flex-col lg:flex-row h-dvh bg-slate-50 overflow-hidden">
       {busy && <div className="saving-overlay" role="status">Salvando…</div>}
       {apiError && <div className="api-error" role="alert">{apiError}<button onClick={() => { setApiError(''); iniciar(); }}>Atualizar dados</button><button onClick={() => setApiError('')}>Fechar</button></div>}
-      <Sidebar active={screen} onNavigate={setScreen} alertCount={alertCount}/>
+      <Sidebar active={screen} onNavigate={setScreen} alertCount={alertCount} onLogout={onLogout}/>
       <main className="flex-1 min-w-0 min-h-0 overflow-y-auto">
         {loading && <p className="p-4" role="status">Carregando estoque…</p>}
         {!loading && screen === 'estoque' && <EstoqueScreen products={products} onDelete={setDeletingProduct} onDeleteMany={setDeletingProduct} onView={setViewingProduct} enabledTypes={enabledTypes} onToggleType={id => setEnabledTypes(ts => ts.includes(id) ? ts.filter(t => t !== id) : [...ts, id])} onEdit={p => { setEditingProduct(p); setShowNovoProduto(true); }} onNewProduct={() => { setEditingProduct(null); setShowNovoProduto(true); }}/>} 

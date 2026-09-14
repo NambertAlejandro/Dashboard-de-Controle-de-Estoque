@@ -4,7 +4,10 @@ const base = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 export async function request(path, method = 'GET', dados) {
   let resposta;
   try {
-    resposta = await fetch(base + path, { method, headers: dados === undefined ? {} : { 'Content-Type': 'application/json' }, body: dados === undefined ? undefined : JSON.stringify(dados) });
+    const token = localStorage.getItem('estoque_token');
+    const headers = dados === undefined ? {} : { 'Content-Type': 'application/json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    resposta = await fetch(base + path, { method, headers, body: dados === undefined ? undefined : JSON.stringify(dados) });
   } catch {
     throw new Error('Não foi possível conectar ao servidor. Confira se o backend está ligado.');
   }
@@ -12,8 +15,26 @@ export async function request(path, method = 'GET', dados) {
   const texto = await resposta.text();
   let resultado;
   try { resultado = JSON.parse(texto); } catch { throw new Error('O servidor não respondeu como esperado. Confira o endereço da API.'); }
+  if (resposta.status === 401 && path !== '/login') {
+    localStorage.removeItem('estoque_token');
+    window.dispatchEvent(new Event('sessao-expirada'));
+  }
   if (!resposta.ok) throw new Error(resultado.erro || 'Não foi possível concluir a operação.');
   return resultado;
+}
+
+export async function entrar(login, senha) {
+  const resultado = await request('/login', 'POST', { login, senha });
+  localStorage.setItem('estoque_token', resultado.token);
+  return resultado.usuario;
+}
+
+export function sair() {
+  localStorage.removeItem('estoque_token');
+}
+
+export function temSessao() {
+  return Boolean(localStorage.getItem('estoque_token'));
 }
 
 export async function carregarEstoque() {
