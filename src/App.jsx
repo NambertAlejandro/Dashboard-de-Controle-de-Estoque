@@ -656,6 +656,7 @@ function Sidebar({ active, onNavigate, alertCount, onLogout, onChangePassword })
       <div className="sidebar-brand px-5 py-4 border-b border-slate-100">
         <img src={stocklyLogo} alt="Stockly" />
         <p>Seu estoque, no controle.</p>
+        <button type="button" onClick={onLogout} className="mobile-logout">Sair</button>
       </div>
 
       {/* Nav */}
