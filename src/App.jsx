@@ -342,6 +342,9 @@ function EstoqueScreen({ products, onDelete, onDeleteMany, onNewProduct, onEdit,
         <div className="flex items-center gap-3"><span className="text-xs text-slate-500">{selectedProducts.length} selecionado{selectedProducts.length === 1 ? '' : 's'}</span><button type="button" disabled={!selectedProducts.length} onClick={() => onDeleteMany(selectedProducts)} className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50">Excluir selecionados</button></div>
       </div>}
       {/* Table */}
+      <div className="mobile-scroll-hint" aria-hidden="true">
+        Deslize a tabela para o lado <span>→</span>
+      </div>
       <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-x-auto">
         <table className="w-full text-sm inventory-table">
           <thead>

@@ -165,6 +165,7 @@ body {
 .sidebar-brand img { display: block; width: 105px; height: 105px; margin: -12px auto -8px; object-fit: contain; }
 .sidebar-brand p { color: #64748b; font-size: 11px; }
 .mobile-logout { display: none; }
+.mobile-scroll-hint { display: none; }
 
 @media (max-width: 1023px) {
   .sidebar-brand { position: relative; }
@@ -182,4 +183,29 @@ body {
     font-size: 13px;
     font-weight: 600;
   }
+  .mobile-scroll-hint {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    margin: -2px 2px 8px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .mobile-scroll-hint span {
+    color: #16a34a;
+    font-size: 20px;
+    line-height: 1;
+    animation: mobile-scroll-arrow 1.3s ease-in-out infinite;
+  }
+}
+
+@keyframes mobile-scroll-arrow {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-scroll-hint span { animation: none; }
 }
