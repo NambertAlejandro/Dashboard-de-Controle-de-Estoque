@@ -107,10 +107,10 @@ function TrocarSenhaModal({ onClose }) {
         <label htmlFor="senha-atual">Senha atual</label>
         <input id="senha-atual" type="password" value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} autoComplete="current-password" required autoFocus />
         <label htmlFor="nova-senha">Nova senha</label>
-        <input id="nova-senha" type="password" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} autoComplete="new-password" minLength="6" required />
+        <input id="nova-senha" type="password" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} autoComplete="new-password" minLength="6" pattern=".*[0-9].*" title="Use pelo menos 6 caracteres e um número" required />
         <label htmlFor="confirmar-nova-senha">Confirmar nova senha</label>
-        <input id="confirmar-nova-senha" type="password" value={confirmacao} onChange={e => setConfirmacao(e.target.value)} autoComplete="new-password" minLength="6" required />
-        <p className="password-help">Use pelo menos 6 caracteres e evite senhas conhecidas, como adm1.</p>
+        <input id="confirmar-nova-senha" type="password" value={confirmacao} onChange={e => setConfirmacao(e.target.value)} autoComplete="new-password" minLength="6" pattern=".*[0-9].*" required />
+        <p className="password-help">Use pelo menos 6 caracteres e um número.</p>
         {mensagem && <p className="password-message" role="status">{mensagem}</p>}
         <div className="password-actions">
           <button type="button" onClick={onClose}>Cancelar</button>

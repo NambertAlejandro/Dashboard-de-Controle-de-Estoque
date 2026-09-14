@@ -39,6 +39,14 @@ export async function trocarSenha(senhaAtual, novaSenha) {
   return await request('/trocar-senha', 'PUT', { senhaAtual, novaSenha });
 }
 
+export async function solicitarCodigo(email) {
+  return await request('/solicitar-codigo', 'POST', { email });
+}
+
+export async function redefinirSenha(email, codigo, novaSenha) {
+  return await request('/redefinir-senha', 'POST', { email, codigo, novaSenha });
+}
+
 export function sair() {
   localStorage.removeItem('estoque_token');
 }

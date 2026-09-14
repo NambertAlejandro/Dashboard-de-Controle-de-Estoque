@@ -142,6 +142,7 @@ body {
 .login-card form > button:hover { background: #15803d; }
 .login-card form > button:disabled { cursor: wait; opacity: .65; }
 .login-error { margin-top: 14px; border-radius: 8px; padding: 10px; background: #fff1f2; color: #b91c1c; font-size: 13px; }
+.login-success { margin-top: 14px; border-radius: 8px; padding: 10px; background: #f0fdf4; color: #166534; font-size: 13px; }
 .login-switch { width: 100%; margin-top: 14px; border: 0; background: transparent; color: #15803d; font-size: 14px; font-weight: 600; cursor: pointer; }
 .login-switch:hover { text-decoration: underline; }
 
