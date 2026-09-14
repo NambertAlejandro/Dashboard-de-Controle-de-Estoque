@@ -5,6 +5,8 @@
 # Images & Graphics
 # ---------------------------------------------------------------------------
 *.png                filter=lfs diff=lfs merge=lfs -text
+# As imagens da landing page precisam estar no próprio repositório para a Vercel.
+src/*.png            -filter -diff -merge binary
 *.jpg                filter=lfs diff=lfs merge=lfs -text
 *.jpeg               filter=lfs diff=lfs merge=lfs -text
 *.gif                filter=lfs diff=lfs merge=lfs -text
