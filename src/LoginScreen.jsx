@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { criarConta, entrar, redefinirSenha, solicitarCodigo } from './api.js';
+import stocklyLogo from './assets/stockly-logo.jpeg';
 
 export default function LoginScreen({ onSuccess }) {
   const [modo, setModo] = useState('entrar');
@@ -54,10 +55,10 @@ export default function LoginScreen({ onSuccess }) {
     }
   };
 
-  const titulo = modo === 'criar' ? 'Criar conta' : modo === 'recuperar' ? 'Recuperar senha' : modo === 'codigo' ? 'Informe o código' : 'Controle de estoque';
+  const titulo = modo === 'criar' ? 'Criar conta' : modo === 'recuperar' ? 'Recuperar senha' : modo === 'codigo' ? 'Informe o código' : 'Bem-vindo à Stockly';
   return <main className="login-page">
     <section className="login-card">
-      <div className="login-brand" aria-hidden="true">▾</div>
+      <img className="login-logo" src={stocklyLogo} alt="Stockly — Seu estoque, no controle." />
       <h1>{titulo}</h1>
       <p>{modo === 'recuperar' ? 'Enviaremos um código de confirmação para seu Gmail.' : modo === 'codigo' ? 'Confira o código de 6 números recebido no Gmail.' : modo === 'criar' ? 'Crie uma conta usando seu Gmail.' : 'Entre com seu Gmail para acessar o estoque.'}</p>
       <form onSubmit={enviar}>

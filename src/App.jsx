@@ -5,6 +5,7 @@ import HistoryScreen from './HistoryScreen.jsx';
 import MovementScanner from './MovementScanner.jsx';
 import { ITEM_TYPES, isStockItem, statusFor, hoje } from './inventory.js';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import stocklyLogo from './assets/stockly-logo.jpeg';
 const itemLabel = type => ITEM_TYPES.find(t => t.id === type)?.label || 'Revenda';
 const PIE_COLORS = ['#16a34a', '#2563eb', '#f59e0b', '#ec4899', '#8b5cf6', '#0ea5e9'];
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -609,16 +610,9 @@ const navItems = [
 function Sidebar({ active, onNavigate, alertCount, onLogout, onChangePassword }) {
     return (<aside className="app-sidebar w-full lg:w-56 flex-shrink-0 bg-white border-r border-slate-100 flex flex-col lg:h-full">
       {/* Logo */}
-      <div className="px-5 py-6 border-b border-slate-100">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-green-600 flex items-center justify-center">
-            <svg width="14" height="14" fill="white" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 7.5M17 13l1.5 7.5M9 21a1 1 0 100-2 1 1 0 000 2zm8 0a1 1 0 100-2 1 1 0 000 2z"/></svg>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-slate-800 leading-none">MercadoApp</p>
-            <p className="text-xs text-slate-400 mt-0.5">Controle de estoque</p>
-          </div>
-        </div>
+      <div className="sidebar-brand px-5 py-4 border-b border-slate-100">
+        <img src={stocklyLogo} alt="Stockly" />
+        <p>Seu estoque, no controle.</p>
       </div>
 
       {/* Nav */}
