@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { criarConta, entrar, redefinirSenha, solicitarCodigo } from './api.js';
-import stocklyLogo from './assets/stockly-logo.jpeg';
+import stocklyLogo from './assets/stockly-logo.svg';
 
 export default function LoginScreen({ onSuccess }) {
   const [modo, setModo] = useState('entrar');

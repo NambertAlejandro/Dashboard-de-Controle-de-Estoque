@@ -5,7 +5,7 @@ import HistoryScreen from './HistoryScreen.jsx';
 import MovementScanner from './MovementScanner.jsx';
 import { ITEM_TYPES, isStockItem, statusFor, hoje } from './inventory.js';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import stocklyLogo from './assets/stockly-logo.jpeg';
+import stocklyLogo from './assets/stockly-logo.svg';
 const itemLabel = type => ITEM_TYPES.find(t => t.id === type)?.label || 'Revenda';
 const PIE_COLORS = ['#16a34a', '#2563eb', '#f59e0b', '#ec4899', '#8b5cf6', '#0ea5e9'];
 // ─── Icons ────────────────────────────────────────────────────────────────────
