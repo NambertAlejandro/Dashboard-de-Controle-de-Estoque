@@ -489,6 +489,21 @@ function MovimentacoesScreen({ products, movements, onAdd }) {
 // ─── Screen 3: Alertas ────────────────────────────────────────────────────────
 function AlertasScreen({ products, onRepor }) {
     const lowProducts = products.filter(p => isStockItem(p) && p.status !== 'Normal');
+    const hojeSemHorario = new Date();
+    hojeSemHorario.setHours(0, 0, 0, 0);
+    const expirationProducts = products
+      .filter(p => isStockItem(p) && p.expirationDate)
+      .map(p => {
+        const expiration = new Date(p.expirationDate + 'T00:00:00');
+        const days = Math.round((expiration - hojeSemHorario) / 86400000);
+        return { ...p, expiration, days };
+      })
+      .filter(p => !Number.isNaN(p.expiration.getTime()))
+      .sort((a, b) => a.expiration - b.expiration);
+    const expirationText = days => days < 0
+      ? `Vencido há ${Math.abs(days)} dia${Math.abs(days) !== 1 ? 's' : ''}`
+      : days === 0 ? 'Vence hoje'
+      : `Vence em ${days} dia${days !== 1 ? 's' : ''}`;
     return (<div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-slate-800">Alertas</h1>
@@ -501,6 +516,24 @@ function AlertasScreen({ products, onRepor }) {
         <p className="text-sm font-medium text-amber-800">
           <span className="font-bold">{lowProducts.length} produto{lowProducts.length !== 1 ? 's' : ''}</span> {lowProducts.length !== 1 ? 'precisam' : 'precisa'} de reposição no estoque.
         </p>
+      </div>
+
+      {/* Expiration List */}
+      <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-x-auto mb-7">
+        <div className="px-5 py-4 border-b border-slate-100">
+          <h2 className="text-sm font-semibold text-slate-700">Validade dos produtos</h2>
+          <p className="mt-1 text-xs text-slate-400">Mais próximos do vencimento primeiro</p>
+        </div>
+        {expirationProducts.length === 0 ? (<p className="text-center text-slate-400 py-10 text-sm">Nenhum produto com validade cadastrada.</p>) : expirationProducts.map((p, i) => (<div key={p.id} className={`flex flex-col gap-3 px-5 py-4 hover:bg-slate-50/70 transition-colors sm:flex-row sm:items-center ${i < expirationProducts.length - 1 ? 'border-b border-slate-50' : ''}`}>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-slate-700">{p.name}</p>
+            <p className="text-xs text-slate-400 mt-0.5">{p.category} · Lote {p.lotNumber || 'não informado'}</p>
+          </div>
+          <div className="sm:text-right">
+            <p className="text-sm font-semibold text-slate-700">{p.expiration.toLocaleDateString('pt-BR')}</p>
+            <p className={`mt-0.5 text-xs font-medium ${p.days <= 0 ? 'text-red-600' : p.days <= 7 ? 'text-amber-600' : 'text-slate-500'}`}>{expirationText(p.days)}</p>
+          </div>
+        </div>))}
       </div>
 
       {/* Low Stock List */}
@@ -663,7 +696,7 @@ export default function App({ onLogout }) {
     const [reporProduct, setReporProduct] = useState(null);
     const [activities, setActivities] = useState([]);
     const [undoing, setUndoing] = useState(null);
-    const alertCount = products.filter(p => isStockItem(p) && p.status !== 'Normal').length;
+    const alertCount = products.filter(p => isStockItem(p) && (p.status !== 'Normal' || p.expirationDate)).length;
     const [loading, setLoading] = useState(true);
     const [busy, setBusy] = useState(false);
     const [apiError, setApiError] = useState('');
